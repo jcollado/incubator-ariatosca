@@ -77,7 +77,9 @@ def application_model_storage(api, api_kwargs=None, initiator=None, initiator_kw
         metadata = aria_declarative_base.metadata
         for table in metadata.tables.values():
             if not table.name.startswith(prefix):
+                dict.__delitem__(metadata.tables, table.name)
                 table.name = '{}{}'.format(prefix, table.name)
+                dict.__setitem__(metadata.tabbles, table.name, table)
 
             for column in table.columns:
                 if isinstance(column.type, Enum):
