@@ -23,6 +23,8 @@ import pkg_resources
 aria_package_name = 'apache-ariatosca'
 __version__ = pkg_resources.get_distribution(aria_package_name).version
 
+from sqlalchemy.types import Enum
+
 from .orchestrator.decorators import (workflow, operation)                                          # pylint: disable=wrong-import-position
 from . import (                                                                                     # pylint: disable=wrong-import-position
     extension,
@@ -33,6 +35,7 @@ from . import (                                                                 
     orchestrator,
     cli
 )
+from .modeling.models import aria_declarative_base
 
 __all__ = (
     '__version__',
@@ -66,10 +69,19 @@ def install_aria_extensions(strict=True):
     extension.init()
 
 
-def application_model_storage(api, api_kwargs=None, initiator=None, initiator_kwargs=None):
+def application_model_storage(api, api_kwargs=None, initiator=None, initiator_kwargs=None, prefix=None):
     """
     Initiate model storage.
     """
+    if prefix:
+        metadata = aria_declarative_base.metadata
+        for table in metadata.tables.values():
+            table.name = '{}{}'.format(prefix, table.name)
+
+            for column in table.columns:
+                if isinstance(column.type, Enum):
+                    column.type.name = '{}{}'.format(prefix, column.type.name)
+
     return storage.ModelStorage(api_cls=api,
                                 api_kwargs=api_kwargs,
                                 items=modeling.models.models_to_register,
